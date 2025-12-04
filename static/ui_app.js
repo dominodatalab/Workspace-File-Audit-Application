@@ -22,21 +22,18 @@ const CONFIG = {
     "hardwareTierId",
   ],
 
-  // Columns to exclude from field selector (chart breakdown)
-  fieldSelectorExcludeColumns: [
-    "uuid",
-    "deduplicationId",
-    "timestamp",
-    "projectId",
-    "userId",
-  ],
-
   // Columns to hide from table display
   hiddenTableColumns: ["userId", "uuid", "deduplicationId"],
 
   // Filter sections configuration
   filterSections: {
-    section1: ["action", "username", "projectName", "workspaceName", "filename"],
+    section1: [
+      "action",
+      "username",
+      "projectName",
+      "workspaceName",
+      "filename",
+    ],
     section2: ["environmentName", "hardwareTierId"],
   },
 
@@ -449,13 +446,15 @@ function renderFilters() {
 
   // Render section 1 filters
   CONFIG.filterSections.section1.forEach((column) => {
-    if (!state.columns[column] || CONFIG.excludeColumns.includes(column)) return;
+    if (!state.columns[column] || CONFIG.excludeColumns.includes(column))
+      return;
     renderFilterControl(column, section1Container);
   });
 
   // Render section 2 filters
   CONFIG.filterSections.section2.forEach((column) => {
-    if (!state.columns[column] || CONFIG.excludeColumns.includes(column)) return;
+    if (!state.columns[column] || CONFIG.excludeColumns.includes(column))
+      return;
     renderFilterControl(column, section2Container);
   });
 }
@@ -1136,9 +1135,10 @@ function renderFieldSelector() {
   const { Select } = antd;
   const { useState, useEffect } = React;
 
-  // Get available fields (exclude certain columns)
-  const availableFields = Object.keys(state.columns).filter(
-    (col) => !CONFIG.fieldSelectorExcludeColumns.includes(col)
+  // Use the same fields as filter section 1 for consistency
+  // Only include fields that exist in the loaded data and are not excluded
+  const availableFields = CONFIG.filterSections.section1.filter(
+    (col) => state.columns[col] && !CONFIG.excludeColumns.includes(col)
   );
 
   const options = [
@@ -1293,7 +1293,11 @@ function updateChart() {
     // Stacked area chart by field
     const topValues =
       state.chartData && state.chartData.length > 0
-        ? getTopNValues(state.chartData, state.selectedField, CONFIG.chart.topNValues)
+        ? getTopNValues(
+            state.chartData,
+            state.selectedField,
+            CONFIG.chart.topNValues
+          )
         : [];
 
     // Initialize time series for each top value and "Other"
@@ -1456,7 +1460,9 @@ function updateTable(total) {
   const visibleColumns = [
     ...CONFIG.tableColumnOrder.filter((col) => allColumns.includes(col)),
     ...allColumns.filter(
-      (col) => !CONFIG.tableColumnOrder.includes(col) && !CONFIG.hiddenTableColumns.includes(col)
+      (col) =>
+        !CONFIG.tableColumnOrder.includes(col) &&
+        !CONFIG.hiddenTableColumns.includes(col)
     ),
   ];
 
