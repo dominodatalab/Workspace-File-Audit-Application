@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace File Audit</title>
+    
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.0/dist/reset.css">
+    
+    <!-- Ant Design Components (using day.js instead of moment) -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/customParseFormat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/localeData.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekYear.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.0/dist/antd.min.js"></script>
+    
+    <!-- Highcharts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <div class="top-navigation">
+        <div class="logo">
+            <img src="logo-domino0.svg" alt="Domino Logo">
+        </div>
+        <div class="nav-items">
+            <div class="nav-item">Workspace File Audit</div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading" id="loading">
+        <div class="loading-spinner">Loading...</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Left Sidebar (Filters) -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <h3 style="margin-bottom: 16px; font-size: 14px; font-weight: 500;">Filters</h3>
+                <div id="filters-section-1"></div>
+                <div style="border-top: 1px solid #f0f0f0; margin: 16px 0;"></div>
+                <div id="filters-section-2"></div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Header with Date Range Picker -->
+            <div class="content-header">
+                <h1>Workspace File Audit</h1>
+                <div class=header-controls>
+                    <div class="date-controls">
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Date Range:</label>
+                            <div id="date-range-picker"></div>
+                        </div>
+                        <div class="advanced-toggle" style="margin-left: auto;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                 
+                            </label>
+                        </div>
+                    </div>
+                    <div class="sync-controls">
+                        <div id="sync-button-container"></div>
+                        <div class="sync-data-container">
+                            <div class="last-sync-time-container">
+                                <label style="display: block; font-size: 12px; margin-bottom: 4px;">Last Data Refresh:</label>
+                                <div id="last-sync-time"></div>
+                            </div>
+                            <div class="last-sync-status-container">
+                                <label style="display: block; font-size: 12px; margin-bottom: 4px;">Data Refresh Status:</label>
+                                <div id="last-sync-status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sql-mode" id="sql-mode">
+                    <label style="display: block; font-size: 12px; margin-bottom: 8px;">SQL Query:</label>
+                    <textarea id="sql-query" placeholder="SELECT * FROM events WHERE ..."></textarea>
+                    <button class="ant-btn ant-btn-primary" id="execute-sql-btn" style="margin-top: 8px;">Execute Query</button>
+                </div>
+            </div>
+
+            <!-- Content Body -->
+            <div class="content-body">
+                <div id="error-container"></div>
+                
+                <!-- Chart Container -->
+                <div class="chart-container hidden" id="chart-container">
+                    <div class="chart-header">
+                        <h2>Events Over Time</h2>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 12px; white-space: nowrap;">Breakdown by:</label>
+                            <div id="chart-field-selector"></div>
+                        </div>
+                    </div>
+                    <div id="chart"></div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="table-container hidden" id="table-container-wrapper">
+                    <div class="table-header">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <h2 id="table-heading">Event Details</h2>
+                            <div id="table-info" style="font-size: 12px; color: #65657b;"></div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="download-btn" id="download-parquet-btn">Download Parquet</button>
+                            <button class="download-btn" id="download-csv-btn">Download CSV</button>
+                        </div>
+                    </div>
+                    <div id="table-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
+
