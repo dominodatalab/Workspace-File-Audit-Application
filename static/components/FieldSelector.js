@@ -13,9 +13,10 @@ export function renderFieldSelector() {
   const { Select } = antd;
   const { useState, useEffect } = React;
 
-  // Get available fields (exclude certain columns)
-  const availableFields = Object.keys(state.columns).filter(
-    (col) => !CONFIG.fieldSelectorExcludeColumns.includes(col)
+  // Use the same fields as filter section 1 for consistency
+  // Only include fields that exist in the loaded data and are not excluded
+  const availableFields = CONFIG.filterSections.section1.filter(
+    (col) => state.columns[col] && !CONFIG.excludeColumns.includes(col)
   );
 
   const options = [
