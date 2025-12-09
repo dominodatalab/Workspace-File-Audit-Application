@@ -117,24 +117,18 @@ def get_data():
         # Make end date inclusive by adding one day (end of the selected day)
         end_date = end_date + timedelta(days=1)
         
-        # Check if we need to download new data
-        if (not parquet_cache['paths'] or 
-            parquet_cache['start'] != start or 
-            parquet_cache['end'] != end):
-            
-            logger.info("Downloading new parquet data...")
-            parquet_paths = download_parquet_data(start_date, end_date)
-            if not parquet_paths:
-                logger.error("Failed to download parquet data")
-                return jsonify({'error': 'Failed to download data. Check server logs for details.'}), 500
-            
-            logger.info(f"Parquet data saved to {len(parquet_paths)} files: {parquet_paths}")
-            parquet_cache['paths'] = parquet_paths
-            parquet_cache['start'] = start
-            parquet_cache['end'] = end
-        else:
-            logger.info(f"Using cached parquet data: {len(parquet_cache['paths'])} files")
+ 
+        logger.info("Downloading new parquet data...")
+        parquet_paths = download_parquet_data(start_date, end_date)
+        if not parquet_paths:
+            logger.error("Failed to download parquet data")
+            return jsonify({'error': 'Failed to download data. Check server logs for details.'}), 500
         
+        logger.info(f"Parquet data saved to {len(parquet_paths)} files: {parquet_paths}")
+        parquet_cache['paths'] = parquet_paths
+        parquet_cache['start'] = start
+        parquet_cache['end'] = end
+    
         # Query data using DuckDB
         conn = duckdb.connect(':memory:')
         

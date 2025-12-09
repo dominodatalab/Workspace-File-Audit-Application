@@ -17,7 +17,6 @@ export function renderSyncButton() {
         type: "primary",
         onClick: () => {
           syncData();
-          renderSyncData();
         },
       },
       "Refresh Data"
@@ -28,6 +27,7 @@ export function renderSyncButton() {
 
 // Render last sync data
 export function renderSyncData() {
+  console.log("Updating data")
   const lastSyncTime = document.getElementById("last-sync-time")
 
   const parts = state.lastSyncTime.split('T');
@@ -45,8 +45,6 @@ export function renderSyncData() {
   )
 
   const lastSyncStatus = document.getElementById("last-sync-status")
-
-
 
   ReactDOM.render(
   	React.createElement(
