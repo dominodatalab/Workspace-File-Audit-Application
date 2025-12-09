@@ -215,7 +215,6 @@ export async function applyFilters(resetPage = false) {
 }
 
 export async function loadSyncStatus() {
-  showLoading(true);
   try {
     const response = await fetch(`${BASE_PATH}/api/sync/status`, {
       method: "GET",
@@ -237,8 +236,6 @@ export async function loadSyncStatus() {
     }
   } catch (error) {
     showError("Error syncing data: " + error.message);
-  } finally {
-    showLoading(false);
   }
 }
 
@@ -256,8 +253,7 @@ export async function syncData() {
     const result = await response.json();
 
     if (response.ok) {
-      state.lastSyncTime = result.updatedAt;
-      state.lastSyncStatus = result.status;
+      loadSyncStatus();
       clearError();
     } else {
       showError(result.error || "Failed to sync data");

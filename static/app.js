@@ -32,3 +32,8 @@ renderPlaceholderFilters();
 renderSyncButton();
 loadSyncStatus();
 // User must click Submit to load data
+
+const pollingInterval = 60000; // milliseconds
+
+// Start the polling
+const intervalId = setInterval(loadSyncStatus, pollingInterval);
