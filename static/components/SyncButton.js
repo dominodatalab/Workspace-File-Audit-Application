@@ -27,7 +27,6 @@ export function renderSyncButton() {
 
 // Render last sync data
 export function renderSyncData() {
-  console.log("Updating data")
   const lastSyncTime = document.getElementById("last-sync-time")
 
   const parts = state.lastSyncTime.split('T');
