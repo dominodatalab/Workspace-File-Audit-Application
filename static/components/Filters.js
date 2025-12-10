@@ -13,6 +13,54 @@ import {
 } from "../utils/helpers.js";
 import { applyFilters } from "../services/api.js";
 
+// Helper to render a single placeholder filter
+function renderPlaceholderFilter(column, container) {
+  const { Select } = antd;
+
+  const filterSection = document.createElement("div");
+  filterSection.className = "filter-section";
+
+  const label = document.createElement("label");
+  const displayLabel = getColumnLabel(column);
+  label.textContent = displayLabel;
+  label.innerHTML += `<span class="filter-count">(0)</span>`;
+
+  const selectContainer = document.createElement("div");
+
+  filterSection.appendChild(label);
+  filterSection.appendChild(selectContainer);
+  container.appendChild(filterSection);
+
+  // Render disabled select
+  ReactDOM.render(
+    React.createElement(Select, {
+      mode: "multiple",
+      style: { width: "100%" },
+      placeholder: `Select ${displayLabel}`,
+      disabled: true,
+      options: [],
+    }),
+    selectContainer
+  );
+}
+
+// Helper to render filters for a specific section
+function renderFilterSection(sectionName, container, isPlaceholder = false) {
+  const sectionConfig = CONFIG.filterSections[sectionName];
+  if (!sectionConfig) return;
+
+  sectionConfig.forEach((column) => {
+    if (CONFIG.excludeColumns.includes(column)) return;
+
+    if (isPlaceholder) {
+      renderPlaceholderFilter(column, container);
+    } else {
+      if (!state.columns[column]) return;
+      renderFilterControl(column, container);
+    }
+  });
+}
+
 // Render placeholder filters on startup (before data is loaded)
 export function renderPlaceholderFilters() {
   const section1Container = document.getElementById("filters-section-1");
@@ -20,69 +68,8 @@ export function renderPlaceholderFilters() {
   section1Container.innerHTML = "";
   section2Container.innerHTML = "";
 
-  const { Select } = antd;
-
-  // Render section 1 placeholder filters
-  CONFIG.filterSections.section1.forEach((column) => {
-    if (CONFIG.excludeColumns.includes(column)) return;
-
-    const filterSection = document.createElement("div");
-    filterSection.className = "filter-section";
-
-    const label = document.createElement("label");
-    const displayLabel = getColumnLabel(column);
-    label.textContent = displayLabel;
-    label.innerHTML += `<span class="filter-count">(0)</span>`;
-
-    const selectContainer = document.createElement("div");
-
-    filterSection.appendChild(label);
-    filterSection.appendChild(selectContainer);
-    section1Container.appendChild(filterSection);
-
-    // Render disabled select
-    ReactDOM.render(
-      React.createElement(Select, {
-        mode: "multiple",
-        style: { width: "100%" },
-        placeholder: `Select ${displayLabel}`,
-        disabled: true,
-        options: [],
-      }),
-      selectContainer
-    );
-  });
-
-  // Render section 2 placeholder filters
-  CONFIG.filterSections.section2.forEach((column) => {
-    if (CONFIG.excludeColumns.includes(column)) return;
-
-    const filterSection = document.createElement("div");
-    filterSection.className = "filter-section";
-
-    const label = document.createElement("label");
-    const displayLabel = getColumnLabel(column);
-    label.textContent = displayLabel;
-    label.innerHTML += `<span class="filter-count">(0)</span>`;
-
-    const selectContainer = document.createElement("div");
-
-    filterSection.appendChild(label);
-    filterSection.appendChild(selectContainer);
-    section2Container.appendChild(filterSection);
-
-    // Render disabled select
-    ReactDOM.render(
-      React.createElement(Select, {
-        mode: "multiple",
-        style: { width: "100%" },
-        placeholder: `Select ${displayLabel}`,
-        disabled: true,
-        options: [],
-      }),
-      selectContainer
-    );
-  });
+  renderFilterSection("section1", section1Container, true);
+  renderFilterSection("section2", section2Container, true);
 }
 
 // Render filters
@@ -92,17 +79,8 @@ export function renderFilters() {
   section1Container.innerHTML = "";
   section2Container.innerHTML = "";
 
-  // Render section 1 filters
-  CONFIG.filterSections.section1.forEach((column) => {
-    if (!state.columns[column] || CONFIG.excludeColumns.includes(column)) return;
-    renderFilterControl(column, section1Container);
-  });
-
-  // Render section 2 filters
-  CONFIG.filterSections.section2.forEach((column) => {
-    if (!state.columns[column] || CONFIG.excludeColumns.includes(column)) return;
-    renderFilterControl(column, section2Container);
-  });
+  renderFilterSection("section1", section1Container, false);
+  renderFilterSection("section2", section2Container, false);
 }
 
 // Helper function to render a single filter control
