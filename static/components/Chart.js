@@ -11,6 +11,43 @@ import {
   generateTimeBuckets,
 } from "../utils/chartHelpers.js";
 
+// Helper to create base chart configuration
+function getBaseChartConfig(chartType = "column", additionalPlotOptions = {}) {
+  return {
+    chart: {
+      type: chartType,
+    },
+    title: {
+      text: null,
+    },
+    xAxis: {
+      type: "datetime",
+      title: {
+        text: "Time",
+      },
+      min: state.dateRange[0].valueOf(),
+      max: state.dateRange[1].valueOf(),
+    },
+    yAxis: {
+      title: {
+        text: "Number of Events",
+      },
+    },
+    plotOptions: {
+      column: {
+        borderWidth: 0,
+        ...additionalPlotOptions,
+      },
+    },
+    credits: {
+      enabled: false,
+    },
+    tooltip: {
+      shared: true,
+    },
+  };
+}
+
 // Update chart
 export function updateChart() {
   if (!state.dateRange || !state.dateRange[0] || !state.dateRange[1]) {
@@ -53,42 +90,13 @@ export function updateChart() {
     }));
 
     const chartConfig = {
-      chart: {
-        type: "column",
-      },
-      title: {
-        text: null,
-      },
-      xAxis: {
-        type: "datetime",
-        title: {
-          text: "Time",
-        },
-        min: state.dateRange[0].valueOf(),
-        max: state.dateRange[1].valueOf(),
-      },
-      yAxis: {
-        title: {
-          text: "Number of Events",
-        },
-      },
+      ...getBaseChartConfig(),
       series: [
         {
           name: "Events",
           data: chartData,
         },
       ],
-      credits: {
-        enabled: false,
-      },
-      plotOptions: {
-        column: {
-          borderWidth: 0,
-        },
-      },
-      tooltip: {
-        shared: true,
-      },
     };
 
     Highcharts.chart("chart", chartConfig);
@@ -163,38 +171,8 @@ export function updateChart() {
     }
 
     const chartConfig = {
-      chart: {
-        type: "column",
-      },
-      title: {
-        text: null,
-      },
-      xAxis: {
-        type: "datetime",
-        title: {
-          text: "Time",
-        },
-        min: state.dateRange[0].valueOf(),
-        max: state.dateRange[1].valueOf(),
-      },
-      yAxis: {
-        title: {
-          text: "Number of Events",
-        },
-      },
-      plotOptions: {
-        column: {
-          stacking: "normal",
-          borderWidth: 0,
-        },
-      },
+      ...getBaseChartConfig("column", { stacking: "normal" }),
       series: series,
-      credits: {
-        enabled: false,
-      },
-      tooltip: {
-        shared: true,
-      },
     };
 
     Highcharts.chart("chart", chartConfig);

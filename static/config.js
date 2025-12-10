@@ -5,7 +5,7 @@
 // Application configuration
 export const CONFIG = {
   // Default pagination settings
-  pageSize: 20,
+  pageSize: 100,
   defaultSortColumn: "timestamp",
   defaultSortOrder: "DESC",
   defaultDateRangeDays: 30,
@@ -36,7 +36,13 @@ export const CONFIG = {
 
   // Filter sections configuration
   filterSections: {
-    section1: ["action", "username", "projectName", "workspaceName", "filename"],
+    section1: [
+      "action",
+      "username",
+      "projectName",
+      "workspaceName",
+      "filename",
+    ],
     section2: ["environmentName", "hardwareTierId"],
   },
 

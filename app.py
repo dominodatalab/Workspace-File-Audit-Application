@@ -18,6 +18,65 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app)
 
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def safe_api_request(url, headers=None, timeout=30, method='GET', **kwargs):
+    """
+    Make a safe API request with comprehensive error handling.
+
+    Args:
+        url: The URL to request
+        headers: Optional headers dict
+        timeout: Request timeout in seconds (default 30)
+        method: HTTP method (default GET)
+        **kwargs: Additional arguments to pass to requests
+
+    Returns:
+        tuple: (success: bool, data: dict|None, error_msg: str|None, status_code: int)
+    """
+    try:
+        if method.upper() == 'GET':
+            response = requests.get(url, headers=headers, timeout=timeout, **kwargs)
+        elif method.upper() == 'POST':
+            response = requests.post(url, headers=headers, timeout=timeout, **kwargs)
+        else:
+            return False, None, f'Unsupported HTTP method: {method}', 400
+
+        # Check if response is successful
+        if not response.ok:
+            error_msg = f'API returned status {response.status_code}'
+            logger.error(f'{error_msg} for {url}')
+            logger.error(f'Response: {response.text[:500]}')
+            return False, None, error_msg, response.status_code
+
+        # Try to parse JSON
+        try:
+            data = response.json()
+            return True, data, None, response.status_code
+        except Exception as json_error:
+            logger.error(f'Failed to parse JSON from {url}: {json_error}')
+            logger.error(f'Response text: {response.text[:500]}')
+            return False, None, 'Invalid JSON response from API', 502
+
+    except requests.exceptions.Timeout:
+        error_msg = f'Request timeout after {timeout}s'
+        logger.error(f'{error_msg} for {url}')
+        return False, None, error_msg, 504
+    except requests.exceptions.ConnectionError as e:
+        error_msg = f'Connection error: {str(e)}'
+        logger.error(f'{error_msg} for {url}')
+        return False, None, error_msg, 503
+    except Exception as e:
+        error_msg = f'Unexpected error: {str(e)}'
+        logger.error(f'{error_msg} for {url}')
+        logger.error(traceback.format_exc())
+        return False, None, error_msg, 500
+
+# ============================================================================
+# DATA MANAGEMENT
+# ============================================================================
 
 # Global cache for parquet data
 parquet_cache = {
@@ -41,54 +100,57 @@ def build_parquet_read_query():
 
 def download_parquet_data(start_date, end_date):
     """Download parquet files from Domino API for the given date range"""
-    try:
-        start_timestamp = int(start_date.timestamp())
-        end_timestamp = int(end_date.timestamp())
-       
-        token = request.headers.get('authorization', '')
-        host = request.headers.get('host', '')
-        headers = {"authorization": token}
-        
-        url = f"https://{host}/api/workspace-audit/v1/events/download-urls?startTimestamp={start_timestamp}000000000&endTimestamp={end_timestamp}000000000"
-        
-        logger.info(f"Requesting download URLs from: {url}")
-        response = requests.get(url, headers=headers)
-        
-        logger.info(f"Response status: {response.status_code}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            logger.info(f"Received {len(data) if isinstance(data, list) else 0} download URLs")
-            
-            if data and isinstance(data, list):
-                temp_dir = tempfile.gettempdir()
-                parquet_dir = os.path.join(temp_dir, "workspace_audit_events")
-                os.makedirs(parquet_dir, exist_ok=True)
-                
-                parquet_files = []
-                for idx, download_url in enumerate(data):
-                    filename = f"events_{idx}.parquet"
-                    local_path = os.path.join(parquet_dir, filename)
-                    
-                    logger.info(f"Downloading parquet file {idx} to {local_path}")
-                    parquet_response = requests.get(download_url)
-                    
-                    if parquet_response.status_code == 200:
-                        with open(local_path, 'wb') as f:
-                            f.write(parquet_response.content)
-                        logger.info(f"Successfully saved {local_path} ({len(parquet_response.content)} bytes)")
-                        parquet_files.append(local_path)
-                    else:
-                        logger.error(f"Failed to download parquet file: {parquet_response.status_code}")
-                
-                logger.info(f"Successfully downloaded {len(parquet_files)} parquet files")
-                return parquet_files if parquet_files else None
-            else:
-                logger.warning("No download URLs received from API")
-        else:
-            logger.error(f"API request failed: {response.status_code} - {response.text}")
-        
+    start_timestamp = int(start_date.timestamp())
+    end_timestamp = int(end_date.timestamp())
+
+    token = request.headers.get('authorization', '')
+    host = request.headers.get('host', '')
+    headers = {"authorization": token}
+
+    url = f"https://{host}/api/workspace-audit/v1/events/download-urls?startTimestamp={start_timestamp}000000000&endTimestamp={end_timestamp}000000000"
+
+    # Use safe_api_request helper
+    success, data, error_msg, _ = safe_api_request(url, headers=headers)
+
+    if not success:
+        logger.error(f"Failed to get download URLs: {error_msg}")
         return None
+
+    logger.info(f"Received {len(data) if isinstance(data, list) else 0} download URLs")
+
+    if not data or not isinstance(data, list):
+        logger.warning("No download URLs received from API")
+        return None
+
+    try:
+        temp_dir = tempfile.gettempdir()
+        parquet_dir = os.path.join(temp_dir, "workspace_audit_events")
+        os.makedirs(parquet_dir, exist_ok=True)
+
+        parquet_files = []
+        for idx, download_url in enumerate(data):
+            filename = f"events_{idx}.parquet"
+            local_path = os.path.join(parquet_dir, filename)
+
+            logger.info(f"Downloading parquet file {idx} to {local_path}")
+
+            # Download parquet file (not JSON, so we can't use safe_api_request)
+            try:
+                parquet_response = requests.get(download_url, timeout=60)
+
+                if parquet_response.status_code == 200:
+                    with open(local_path, 'wb') as f:
+                        f.write(parquet_response.content)
+                    logger.info(f"Successfully saved {local_path} ({len(parquet_response.content)} bytes)")
+                    parquet_files.append(local_path)
+                else:
+                    logger.error(f"Failed to download parquet file: {parquet_response.status_code}")
+            except Exception as download_error:
+                logger.error(f"Error downloading file {idx}: {download_error}")
+
+        logger.info(f"Successfully downloaded {len(parquet_files)} parquet files")
+        return parquet_files if parquet_files else None
+
     except Exception as e:
         logger.error(f"Error in download_parquet_data: {str(e)}")
         logger.error(traceback.format_exc())
@@ -163,30 +225,42 @@ def get_data():
         return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 @app.route('/api/sync/status', methods=['GET'])
-def get_sync_data():   
+def get_sync_data():
     token = request.headers.get('authorization', '')
     host = request.headers.get('host', '')
     headers = {"authorization": token}
 
     url = f"https://{host}/api/workspace-audit/v1/process/latest"
 
-    logger.info(f"Fetching data sync information: {url}")
-    response = requests.get(url, headers=headers)
+    # Use safe_api_request helper
+    success, data, error_msg, status_code = safe_api_request(url, headers=headers)
 
-    return response.json()
+    if not success:
+        return jsonify({
+            'error': error_msg,
+            'status': 'error'
+        }), status_code
+
+    return jsonify(data)
 
 @app.route('/api/sync', methods=['POST'])
-def trigger_sync():   
+def trigger_sync():
     token = request.headers.get('authorization', '')
     host = request.headers.get('host', '')
     headers = {"authorization": token}
 
     url = f"https://{host}/api/workspace-audit/v1/process"
 
-    logger.info(f"Triggering data sync: {url}")
-    response = requests.post(url, headers=headers)
+    # Use safe_api_request helper
+    success, data, error_msg, status_code = safe_api_request(url, headers=headers, method='POST')
 
-    return response.json()
+    if not success:
+        return jsonify({
+            'error': error_msg,
+            'status': 'error'
+        }), status_code
+
+    return jsonify(data)
 
 @app.route('/api/query', methods=['POST'])
 def query_data():
@@ -198,7 +272,7 @@ def query_data():
         substring_filters = data.get('substringFilters', {})
         regex_filters = data.get('regexFilters', {})
         page = data.get('page', 1)
-        page_size = data.get('pageSize', 20)
+        page_size = data.get('pageSize', 100)
         sort_column = data.get('sortColumn', 'timestamp')  # Default to timestamp
         sort_order = data.get('sortOrder', 'DESC')  # Default to descending (latest first)
         
@@ -598,19 +672,45 @@ def get_filtered_data_for_download(filters, substring_filters, regex_filters):
     
     # Execute query to get all filtered data
     result = conn.execute(query).fetchdf()
-    
+
     # Convert timestamp to readable format
     if 'timestamp' in result.columns:
         result['timestamp'] = (result['timestamp'] / 1e9).apply(
             lambda x: datetime.fromtimestamp(x).isoformat()
         )
-    
+
     conn.close()
-    
+
+    # Define columns to hide (matching UI hiddenTableColumns)
+    HIDDEN_COLUMNS = ['userId', 'uuid', 'deduplicationId']
+
+    # Remove hidden columns
+    result = result.drop(columns=[col for col in HIDDEN_COLUMNS if col in result.columns], errors='ignore')
+
+    # Define UI table column order (matching UI tableColumnOrder)
+    TABLE_COLUMN_ORDER = [
+        'timestamp',
+        'username',
+        'action',
+        'filename',
+        'projectName',
+        'workspaceName',
+        'environmentName',
+        'hardwareTierId',
+        'projectId',
+    ]
+
+    # Reorder columns to match UI table
+    ordered_columns = [col for col in TABLE_COLUMN_ORDER if col in result.columns]
+    # Add any remaining columns not in the order list
+    remaining_columns = [col for col in result.columns if col not in TABLE_COLUMN_ORDER]
+    final_column_order = ordered_columns + remaining_columns
+    result = result[final_column_order]
+
     # Rename columns to human-readable names
     rename_mapping = {col: COLUMN_NAME_MAPPING.get(col, col) for col in result.columns}
     result = result.rename(columns=rename_mapping)
-    
+
     return result
 
 @app.route('/api/download/csv', methods=['POST'])
@@ -624,23 +724,23 @@ def download_csv():
 
         # Get filtered data
         df = get_filtered_data_for_download(filters, substring_filters, regex_filters)
-        
+
         # Convert to CSV
         output = io.StringIO()
         df.to_csv(output, index=False)
         output.seek(0)
-        
+
         # Generate filename with timestamp
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f'workspace_audit_events_{timestamp}.csv'
-        
+
         return send_file(
             io.BytesIO(output.getvalue().encode('utf-8')),
             mimetype='text/csv',
             as_attachment=True,
             download_name=filename
         )
-    
+
     except Exception as e:
         logger.error(f"Error in download_csv: {str(e)}")
         logger.error(traceback.format_exc())
