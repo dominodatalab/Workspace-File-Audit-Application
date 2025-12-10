@@ -54,6 +54,14 @@ body {
     background: rgba(255, 255, 255, 0.1);
 }
 
+.nav-link {
+    text-decoration: none;
+}
+
+.nav-link:visited {
+    color: #ffffff;
+}
+
 /* Main Content Layout */
 .main-content {
     display: flex;
