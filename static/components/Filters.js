@@ -25,6 +25,35 @@ function renderPlaceholderFilter(column, container) {
   label.textContent = displayLabel;
   label.innerHTML += `<span class="filter-count">(0)</span>`;
 
+  // Add info icon with tooltip for all filters
+  const infoIcon = document.createElement("span");
+  infoIcon.className = "filter-info-icon";
+
+  // Different tooltip text for filename vs other filters
+  const tooltipText = column === "filename"
+    ? "Filter by selecting files, typing substrings to match, or entering regex (begins with /)."
+    : "Filter by selecting values or typing substrings to match.";
+
+  infoIcon.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 16v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="8" r="1" fill="currentColor"/>
+    </svg>
+    <span class="filter-tooltip">${tooltipText}</span>
+  `;
+
+  // Position tooltip dynamically on hover
+  infoIcon.addEventListener("mouseenter", () => {
+    const tooltip = infoIcon.querySelector(".filter-tooltip");
+    const rect = infoIcon.getBoundingClientRect();
+    tooltip.style.left = `${rect.right + 8}px`;
+    tooltip.style.top = `${rect.top + rect.height / 2}px`;
+    tooltip.style.transform = `translateY(-50%)`;
+  });
+
+  label.appendChild(infoIcon);
+
   const selectContainer = document.createElement("div");
 
   filterSection.appendChild(label);
@@ -103,6 +132,35 @@ function renderFilterControl(column, container) {
   } else {
     label.innerHTML += `<span class="filter-count">(${totalCount})</span>`;
   }
+
+  // Add info icon with tooltip for all filters
+  const infoIcon = document.createElement("span");
+  infoIcon.className = "filter-info-icon";
+
+  // Different tooltip text for filename vs other filters
+  const tooltipText = column === "filename"
+    ? "Filter by selecting files, typing substrings to match, or entering regex (begins with /)."
+    : "Filter by selecting values or typing substrings to match.";
+
+  infoIcon.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 16v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="8" r="1" fill="currentColor"/>
+    </svg>
+    <span class="filter-tooltip">${tooltipText}</span>
+  `;
+
+  // Position tooltip dynamically on hover
+  infoIcon.addEventListener("mouseenter", () => {
+    const tooltip = infoIcon.querySelector(".filter-tooltip");
+    const rect = infoIcon.getBoundingClientRect();
+    tooltip.style.left = `${rect.right + 8}px`;
+    tooltip.style.top = `${rect.top + rect.height / 2}px`;
+    tooltip.style.transform = `translateY(-50%)`;
+  });
+
+  label.appendChild(infoIcon);
 
   const selectContainer = document.createElement("div");
   selectContainer.id = `filter-${column}`;

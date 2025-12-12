@@ -201,7 +201,8 @@ body {
 }
 
 .filter-section label {
-    display: block;
+    display: flex;
+    align-items: center;
     font-size: 12px;
     font-weight: 500;
     margin-bottom: 8px;
@@ -212,6 +213,61 @@ body {
     color: #65657b;
     font-size: 11px;
     margin-left: 4px;
+}
+
+/* Filter Info Icon */
+.filter-info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-left: 6px;
+    cursor: pointer;
+    position: relative;
+}
+
+.filter-info-icon svg {
+    width: 16px;
+    height: 16px;
+    color: #65657b;
+}
+
+.filter-info-icon:hover svg {
+    color: #2e2e38;
+}
+
+/* Tooltip */
+.filter-tooltip {
+    position: fixed;
+    background: #2e2e38;
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: normal;
+    max-width: 240px;
+    width: max-content;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10000;
+    line-height: 1.4;
+}
+
+.filter-tooltip::after {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: #2e2e38;
+}
+
+.filter-info-icon:hover .filter-tooltip {
+    opacity: 1;
 }
 
 /* SQL Query Mode */
