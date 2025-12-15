@@ -15,7 +15,11 @@ export function showLoading(show) {
 // Show error message
 export function showError(message) {
   const container = document.getElementById("error-container");
-  container.innerHTML = `<div class="error-message">${message}</div>`;
+  const errorDiv = document.createElement("div");
+  errorDiv.className = "error-message";
+  errorDiv.textContent = message;
+  container.innerHTML = "";
+  container.appendChild(errorDiv);
 }
 
 // Clear error message

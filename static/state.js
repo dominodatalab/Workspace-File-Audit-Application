@@ -18,7 +18,6 @@ function getBasePath() {
 
 export const BASE_PATH = getBasePath();
 
-// Global state
 export const state = {
   data: [],
   filteredData: [],

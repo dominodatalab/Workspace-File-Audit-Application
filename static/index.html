@@ -9,23 +9,24 @@
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/antd@5.12.0/dist/reset.css"
+      crossorigin="anonymous"
     />
 
     <!-- Ant Design Components (using day.js instead of moment) -->
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/customParseFormat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/localeData.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekYear.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.0/dist/antd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/customParseFormat.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/localeData.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekYear.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.0/dist/antd.min.js" crossorigin="anonymous"></script>
 
     <!-- Highcharts -->
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js" crossorigin="anonymous"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="app.css" />
   </head>
@@ -62,6 +63,52 @@
           </svg>
         </a>
       </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="info-banner" id="info-banner">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+        <path
+          d="M12 16v-4"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <circle cx="12" cy="8" r="1" fill="currentColor" />
+      </svg>
+      <span
+        >This audit trail captures file access activity on Domino Datasets and NetApp
+        Volumes within the workspace. Events refresh approximately every hour.
+        Results do not update automatically.</span
+      >
+      <button
+        class="info-banner-close"
+        id="info-banner-close"
+        aria-label="Close banner"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18 6L6 18M6 6l12 12"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
     </div>
 
     <!-- Loading Indicator -->
@@ -121,7 +168,6 @@
                   <div id="last-sync-status"></div>
                 </div>
               </div>
-              <div id="sync-button-container"></div>
             </div>
           </div>
 

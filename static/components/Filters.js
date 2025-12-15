@@ -30,9 +30,10 @@ function renderPlaceholderFilter(column, container) {
   infoIcon.className = "filter-info-icon";
 
   // Different tooltip text for filename vs other filters
-  const tooltipText = column === "filename"
-    ? "Filter by selecting files, typing substrings to match, or entering regex (begins with /)."
-    : "Filter by selecting values or typing substrings to match.";
+  const tooltipText =
+    column === "filename"
+      ? "Filter by selecting files, typing substrings to match, or entering regex (begins with /)."
+      : "Values reflect events in the selected time range. Filters narrow each other.";
 
   infoIcon.innerHTML = `
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -138,9 +139,10 @@ function renderFilterControl(column, container) {
   infoIcon.className = "filter-info-icon";
 
   // Different tooltip text for filename vs other filters
-  const tooltipText = column === "filename"
-    ? "Filter by selecting files, typing substrings to match, or entering regex (begins with /)."
-    : "Filter by selecting values or typing substrings to match.";
+  const tooltipText =
+    column === "filename"
+      ? "Filter by selecting files, typing substrings to match, or entering regex (begins with /)."
+      : "Filter by selecting values or typing substrings to match.";
 
   infoIcon.innerHTML = `
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
