@@ -38,45 +38,56 @@ A comprehensive web application for visualizing and analyzing Domino workspace a
 
 ## Key Features
 
-### 1. Date Range Picker (Top)
-- **Default**: Last 30 days
-- **Customizable**: Select any date range
+### 1. Date Range Picker & Controls (Top)
+- **Default**: Last 7 days
+- **Auto-load**: Data loads automatically on page load
+- **Customizable**: Select any date range and click "Query"
 - **Action**: Downloads fresh parquet data from Domino API
 - **Format**: YYYY-MM-DD
+- **Data Refresh Status**: Shows last sync time and current status
+  - Displays timestamp of most recent data ingestion
+  - Updates every 60 seconds
+  - Status indicators: "Completed", "In Progress", etc.
 
 ### 2. Filter Panel (Left Sidebar)
 - **Multi-select**: Choose multiple values per filter
 - **Autocomplete Search**: Type to find specific values
+- **Filter Types**:
+  - **Exact Match**: Select specific values from dropdown
+  - **Substring Search**: Type text to match partial values (e.g., "demo")
+  - **Regex Patterns**: Type `/pattern/` for advanced matching (e.g., `/\.py$/`)
 - **Available Filters**:
   - Username
   - Action (Read/Write)
   - Project Name
-  - Hardware Tier
-  - Environment Name
   - Workspace Name
-  - Project ID
-  - User ID
-  - Filename (partial match)
+  - Filename (supports all three filter types)
+  - Environment Name
+  - Hardware Tier
+- **Cascading**: Filter options update based on current selections
 - **Real-time**: Filters apply locally on cached data
-- **Count Indicators**: Shows number of unique values per column
+- **Count Indicators**: Shows available/total unique values per column
+- **Info Icons**: Hover tooltips explain filter functionality
 
 ### 3. Chart Visualization (Center Top)
-- **Chart Types**:
-  - **Column Chart**: Vertical bars for comparing categories
-  - **Line Chart**: Trend analysis over time
-  - **Pie Chart**: Proportional distribution
-  - **Area Chart**: Cumulative trends
-- **Interactive**: Hover for details, click to filter
+- **Time Series**: Events over time with automatic bucketing (daily/weekly/monthly)
+- **Breakdown Field**: Select any field to split the chart by that dimension
+- **Top N Values**: Shows top 10 values, groups others as "Other"
+- **Stacked Area Chart**: Visual representation of event distribution
+- **Interactive**: Hover for details, legend for toggling series
 - **Powered by**: Highcharts library
-- **Default View**: Events grouped by action type
+- **Export**: Download chart as PNG/SVG
 
 ### 4. Data Table (Center Bottom)
-- **Columns**: All event fields displayed
-- **Pagination**: 20 records per page
+- **Columns**: All event fields displayed with human-readable labels
+- **Column Order**: Logical ordering (timestamp, username, action, filename, etc.)
+- **Hidden Columns**: Sensitive fields (userId, uuid) hidden by default
+- **Pagination**: 100 records per page
 - **Scrollable**: Horizontal scroll for many columns
-- **Sortable**: Click column headers to sort
-- **Ellipsis**: Long text truncated with hover tooltip
-- **Navigation**: First, Previous, Page numbers, Next, Last
+- **Sortable**: Click column headers to sort ascending/descending
+- **Formatted Data**: Timestamps shown in human-readable format
+- **Ellipsis**: Long text truncated with full text visible on hover
+- **Navigation**: Page numbers with current page indicator
 
 ### 5. Advanced SQL Mode (Toggle)
 - **Access**: Enable via checkbox in header
@@ -101,16 +112,33 @@ A comprehensive web application for visualizing and analyzing Domino workspace a
 - **Execute**: Button to run query
 - **Results**: Update both chart and table
 
+### 6. Data Export
+- **CSV Export**: Download filtered data as CSV with human-readable column labels
+- **Parquet Export**: Download filtered data as Parquet for data science workflows
+- **Filtered Results**: Exports respect all active filters
+- **Timestamped Filenames**: Automatic filename generation with date range
+
+### 7. Info Banner
+- **Usage Information**: Displays key information about data sources and refresh frequency
+- **Dismissible**: Close button to hide the banner
+- **Helpful Context**: Explains that data captures NetApp Volumes and Domino Datasets activity
+
+### 8. Help & Documentation
+- **Navigation Link**: Accessible from top navigation bar
+- **External Documentation**: Links to official Domino documentation
+- **Comprehensive Guide**: Covers all features and use cases
+
 ## Workflow
 
 ### Standard Filtering Workflow
-1. **Select Date Range** → Click "Load Data"
-2. **View Overview** → Chart shows distribution
-3. **Apply Filters** → Use left sidebar multi-selects
-4. **Explore Data** → Browse paginated table
-5. **Change Visualization** → Select different chart type
-6. **Refine Filters** → Add/remove filter values
-7. **Navigate Pages** → View more records
+1. **Page Load** → Data loads automatically for last 7 days
+2. **View Overview** → Chart shows event distribution over time
+3. **Apply Filters** → Use left sidebar multi-selects, substring, or regex
+4. **Explore Data** → Browse paginated table with sorting
+5. **Change Breakdown** → Select different field for chart breakdown
+6. **Refine Filters** → Add/remove filter values, cascading updates
+7. **Navigate Pages** → View more records (100 per page)
+8. **Export Data** → Download filtered results as CSV or Parquet
 
 ### Advanced SQL Workflow
 1. **Select Date Range** → Click "Load Data"
@@ -187,15 +215,23 @@ Chart & Table Updated
 - **No Data**: Displays "No data available" message
 - **Loading States**: Shows spinner during operations
 
+## Implemented Features
+- ✅ CSV/Parquet export
+- ✅ Cascading filters
+- ✅ Regex pattern matching
+- ✅ Data refresh status monitoring
+- ✅ Info banner with usage information
+- ✅ Help documentation link
+- ✅ Automatic data loading on startup
+- ✅ Column sorting
+- ✅ Human-readable column labels
+
 ## Future Enhancements (Potential)
-- Export to CSV/Excel
 - Save favorite queries
 - Custom chart configurations
-- Real-time updates via WebSocket
 - User preferences storage
-- Multi-file parquet support
-- Advanced chart drilling
-- Data export functionality
 - Query history
 - Bookmarkable filter states
+- Column visibility toggle
+- Advanced date range presets (last 24 hours, last month, etc.)
 

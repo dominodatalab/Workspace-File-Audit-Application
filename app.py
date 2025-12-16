@@ -579,15 +579,17 @@ def get_filtered_columns():
 
 # Human-readable column name mappings
 COLUMN_NAME_MAPPING = {
-    'timestamp': 'Timestamp',
-    'username': 'Username',
+    'timestamp': 'Date & Time (UTC)',
+    'username': 'User Name',
     'action': 'Event',
-    'filename': 'File path',
+    'filename': 'File Path',
     'projectName': 'Project Name',
     'workspaceName': 'Workspace Name',
     'environmentName': 'Environment Name',
-    'hardwareTierId': 'Hardware Tier',
+    'environmentRevisionNumber': 'Environment Revision Number',
+    'hardwareTierId': 'Hardware Tier ID',
     'projectId': 'Project ID',
+    'workspaceId': 'Workspace ID',
     'userId': 'User ID',
     'uuid': 'UUID',
     'deduplicationId': 'Deduplication ID'
@@ -694,10 +696,12 @@ def get_filtered_data_for_download(filters, substring_filters, regex_filters):
         'action',
         'filename',
         'projectName',
-        'workspaceName',
-        'environmentName',
-        'hardwareTierId',
         'projectId',
+        'workspaceName',
+        'workspaceId',
+        'environmentName',
+        'environmentRevisionNumber',
+        'hardwareTierId',
     ]
 
     # Reorder columns to match UI table

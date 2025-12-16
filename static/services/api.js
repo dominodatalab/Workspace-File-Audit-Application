@@ -11,7 +11,6 @@ import { renderSyncData } from "../components/SyncButton.js";
 import { updateChart } from "../components/Chart.js";
 import { updateTable } from "../components/Table.js";
 
-// Load data from server
 export async function loadData() {
   if (!state.dateRange || !state.dateRange[0] || !state.dateRange[1]) {
     showError("Please select a date range");
@@ -31,26 +30,18 @@ export async function loadData() {
     if (response.ok) {
       state.data = result.data;
       state.filteredData = result.data;
-      state.chartData = result.data; // Initially, chart data is same as all data
+      state.chartData = result.data;
 
-      // Load column metadata
       await loadColumns();
-
-      // Render filters and field selector
       renderFilters();
       renderFieldSelector();
 
-      // Show chart and table containers
       document.getElementById("chart-container").classList.remove("hidden");
       document
         .getElementById("table-container-wrapper")
         .classList.remove("hidden");
 
-      // Reset to page 1 when loading new data (new date range)
       state.currentPage = 1;
-
-      // Always use applyFilters to ensure proper sorting and pagination
-      // even when there are no filters
       await applyFilters(false);
 
       clearError();
@@ -64,7 +55,6 @@ export async function loadData() {
   }
 }
 
-// Load column metadata
 export async function loadColumns() {
   try {
     const response = await fetch(`${BASE_PATH}/api/columns`);
@@ -72,8 +62,8 @@ export async function loadColumns() {
 
     if (response.ok) {
       state.columns = result.columns;
-      state.availableColumns = result.columns; // Initially, all columns are available
-      state.columnLabels = result.columnLabels || {}; // Store human-readable labels from backend
+      state.availableColumns = result.columns;
+      state.columnLabels = result.columnLabels || {};
     } else {
       console.error("Failed to load columns:", result);
       showError(
@@ -86,7 +76,6 @@ export async function loadColumns() {
   }
 }
 
-// Load available columns based on current filters (for cascading filters)
 export async function loadAvailableColumns() {
   try {
     const cleanedFilters = cleanFilters(state.filters);
@@ -109,7 +98,6 @@ export async function loadAvailableColumns() {
 
     if (response.ok) {
       state.availableColumns = result.columns;
-      // Re-render filters with updated available options
       renderFilters();
     }
   } catch (error) {
@@ -117,14 +105,11 @@ export async function loadAvailableColumns() {
   }
 }
 
-// Apply filters
 export async function applyFilters(resetPage = false) {
-  // Reset to page 1 when filters change (not when just changing pages)
   if (resetPage) {
     state.currentPage = 1;
   }
 
-  // Clean up empty filter arrays to avoid sending unnecessary data
   const cleanedFilters = cleanFilters(state.filters);
   const cleanedSubstringFilters = cleanFilters(state.substringFilters);
   const cleanedRegexFilters = cleanFilters(state.regexFilters);
@@ -141,8 +126,6 @@ export async function applyFilters(resetPage = false) {
       sortOrder: state.sortOrder,
     };
 
-    console.log("Applying filters with request:", requestBody);
-
     const response = await fetch(`${BASE_PATH}/api/query`, {
       method: "POST",
       headers: {
@@ -153,54 +136,30 @@ export async function applyFilters(resetPage = false) {
 
     const result = await response.json();
 
-    console.log("Apply filters result:", {
-      dataCount: result.data?.length,
-      chartDataCount: result.chartData?.length,
-      total: result.total,
-    });
-
     if (response.ok) {
-      // Check if current page is valid for the total results
       const maxPage = Math.max(1, Math.ceil(result.total / state.pageSize));
       if (state.currentPage > maxPage) {
-        console.log(
-          `Current page ${state.currentPage} exceeds max page ${maxPage}, resetting to page 1`
-        );
         state.currentPage = 1;
-        // Re-fetch with corrected page
         applyFilters(false);
         return;
       }
 
-      // Check for data mismatch (this shouldn't happen but let's be defensive)
       if (
         (!result.data || result.data.length === 0) &&
         result.chartData &&
         result.chartData.length > 0 &&
         result.total > 0
       ) {
-        console.warn(
-          "Data mismatch detected: chartData has data but table data is empty. Resetting to page 1."
-        );
         state.currentPage = 1;
         applyFilters(false);
         return;
       }
 
       state.filteredData = result.data || [];
-      state.chartData = result.chartData || result.data || []; // Use separate chart data
-      console.log("State after update:", {
-        filteredDataCount: state.filteredData.length,
-        chartDataCount: state.chartData.length,
-        total: result.total,
-        currentPage: state.currentPage,
-        maxPage: maxPage,
-      });
+      state.chartData = result.chartData || result.data || [];
       updateChart();
       updateTable(result.total);
 
-      // Update available filter options based on current filters (cascading filters)
-      // Only do this if we have filters applied and we're resetting to page 1 (filter change)
       if (resetPage) {
         await loadAvailableColumns();
       }
@@ -226,20 +185,18 @@ export async function loadSyncStatus() {
     const result = await response.json();
 
     if (response.ok) {
-      console.log(result)
       state.lastSyncTime = result.updatedAt;
       state.lastSyncStatus = result.status;
       renderSyncData();
       clearError();
     } else {
-      showError(result.error || "Failed to sync data");
+      console.error("Failed to load sync status:", result.error);
     }
   } catch (error) {
-    showError("Error syncing data: " + error.message);
+    console.error("Error loading sync status:", error);
   }
 }
 
-// Trigger data sync
 export async function syncData() {
   showLoading(true);
   try {
@@ -265,7 +222,6 @@ export async function syncData() {
   }
 }
 
-// Execute SQL query
 export async function executeSqlQuery() {
   const sqlQuery = document.getElementById("sql-query").value;
   if (!sqlQuery.trim()) {
@@ -291,7 +247,7 @@ export async function executeSqlQuery() {
 
     if (response.ok) {
       state.filteredData = result.data;
-      state.chartData = result.chartData || result.data; // Use separate chart data
+      state.chartData = result.chartData || result.data;
       updateChart();
       updateTable(result.total);
       clearError();
@@ -305,7 +261,6 @@ export async function executeSqlQuery() {
   }
 }
 
-// Download data as CSV
 export async function downloadCSV() {
   showLoading(true);
   try {
@@ -327,7 +282,6 @@ export async function downloadCSV() {
       const a = document.createElement("a");
       a.href = url;
 
-      // Extract filename from Content-Disposition header if available
       const contentDisposition = response.headers.get("Content-Disposition");
       let filename = "workspace_audit_events.csv";
       if (contentDisposition) {
@@ -356,7 +310,6 @@ export async function downloadCSV() {
   }
 }
 
-// Download data as Parquet
 export async function downloadParquet() {
   showLoading(true);
   try {
@@ -378,7 +331,6 @@ export async function downloadParquet() {
       const a = document.createElement("a");
       a.href = url;
 
-      // Extract filename from Content-Disposition header if available
       const contentDisposition = response.headers.get("Content-Disposition");
       let filename = "workspace_audit_events.parquet";
       if (contentDisposition) {

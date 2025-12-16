@@ -6,15 +6,13 @@ import { state } from "../state.js";
 import { loadData } from "../services/api.js";
 import { showError } from "../utils/ui.js";
 
-// Initialize with default date range (last 30 days)
 export function initializeDateRange() {
   const endDate = dayjs();
-  const startDate = dayjs().subtract(30, "days");
+  const startDate = dayjs().subtract(7, "days");
   state.dateRange = [startDate, endDate];
   renderDateRangePicker();
 }
 
-// Render Date Range Picker using Ant Design
 export function renderDateRangePicker() {
   const { RangePicker } = antd.DatePicker;
   const { Button } = antd;
@@ -30,7 +28,6 @@ export function renderDateRangePicker() {
           value: state.dateRange,
           onChange: (dates) => {
             state.dateRange = dates;
-            // Re-render to update the component with the new value
             renderDateRangePicker();
           },
           format: "YYYY-MM-DD",
@@ -48,7 +45,7 @@ export function renderDateRangePicker() {
               }
             },
           },
-          "Submit"
+          "Query"
         ),
       ]
     ),

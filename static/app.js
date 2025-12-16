@@ -4,10 +4,14 @@
 
 import { initializeDateRange } from "./components/DateRangePicker.js";
 import { renderPlaceholderFilters } from "./components/Filters.js";
-import { renderSyncButton } from "./components/SyncButton.js";
-import { executeSqlQuery, downloadCSV, downloadParquet, loadSyncStatus } from "./services/api.js";
+import {
+  executeSqlQuery,
+  downloadCSV,
+  downloadParquet,
+  loadSyncStatus,
+  loadData,
+} from "./services/api.js";
 
-// Event listeners
 document
   .getElementById("execute-sql-btn")
   .addEventListener("click", executeSqlQuery);
@@ -18,7 +22,20 @@ document
   .getElementById("download-parquet-btn")
   .addEventListener("click", downloadParquet);
 
-// Initialize dayjs plugins
+const infoBannerCloseBtn = document.getElementById("info-banner-close");
+if (infoBannerCloseBtn) {
+  infoBannerCloseBtn.addEventListener("click", () => {
+    const banner = document.getElementById("info-banner");
+    if (banner) {
+      banner.classList.add("hidden");
+      const mainContent = document.querySelector(".main-content");
+      if (mainContent) {
+        mainContent.style.height = "calc(100vh - 44px)";
+      }
+    }
+  });
+}
+
 dayjs.extend(dayjs_plugin_customParseFormat);
 dayjs.extend(dayjs_plugin_weekday);
 dayjs.extend(dayjs_plugin_localeData);
@@ -26,14 +43,14 @@ dayjs.extend(dayjs_plugin_weekOfYear);
 dayjs.extend(dayjs_plugin_weekYear);
 dayjs.extend(dayjs_plugin_advancedFormat);
 
-// Initialize the application
 initializeDateRange();
 renderPlaceholderFilters();
-renderSyncButton();
 loadSyncStatus();
-// User must click Submit to load data
+loadData();
 
-const pollingInterval = 60000; // milliseconds
+const pollingInterval = 60000;
+setInterval(loadSyncStatus, pollingInterval);
 
-// Start the polling
-const intervalId = setInterval(loadSyncStatus, pollingInterval);
+window.addEventListener("beforeunload", () => {
+  clearError();
+});
