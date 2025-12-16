@@ -25,8 +25,8 @@ function getBaseChartConfig(chartType = "column", additionalPlotOptions = {}) {
       title: {
         text: "Time",
       },
-      min: state.dateRange[0].valueOf(),
-      max: state.dateRange[1].valueOf(),
+      min: dayjs(state.dateRange[0]).startOf('day').valueOf(),
+      max: dayjs(state.dateRange[1]).endOf('day').valueOf(),
     },
     yAxis: {
       title: {

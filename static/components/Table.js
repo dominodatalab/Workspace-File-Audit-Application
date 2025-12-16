@@ -54,7 +54,8 @@ export function updateTable(total) {
       dataIndex: col,
       key: col,
       ellipsis: true,
-      width: col === "filename" ? 300 : col === "timestamp" ? 180 : undefined,
+      width: col === "filename" ? 300 : col === "timestamp" ? 180 : 150,
+      resizable: true,
       sorter: true,
       sortDirections: ["ascend", "descend", "ascend"],
       sortOrder:
@@ -84,6 +85,83 @@ export function updateTable(total) {
     return columnConfig;
   });
 
+  const ResizableTitle = (props) => {
+    const { onResize, width, ...restProps } = props;
+
+    if (!width) {
+      return React.createElement("th", restProps);
+    }
+
+    const thRef = React.useRef(null);
+
+    React.useEffect(() => {
+      const th = thRef.current;
+      if (!th) return;
+
+      const resizer = th.querySelector('.react-resizable-handle');
+      if (!resizer) return;
+
+      let startX = 0;
+      let startWidth = 0;
+
+      const handleMouseDown = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        startX = e.pageX;
+        startWidth = th.offsetWidth;
+
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        const handleMouseMove = (e) => {
+          e.preventDefault();
+          const newWidth = startWidth + (e.pageX - startX);
+          if (newWidth > 50) {
+            requestAnimationFrame(() => {
+              th.style.width = newWidth + 'px';
+              th.style.minWidth = newWidth + 'px';
+            });
+          }
+        };
+
+        const handleMouseUp = () => {
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+      };
+
+      resizer.addEventListener('mousedown', handleMouseDown);
+
+      return () => {
+        resizer.removeEventListener('mousedown', handleMouseDown);
+      };
+    }, [onResize]);
+
+    return React.createElement(
+      "th",
+      { ...restProps, ref: thRef, style: { ...restProps.style, position: 'relative', width } },
+      restProps.children,
+      React.createElement("span", {
+        className: "react-resizable-handle",
+        onClick: (e) => e.stopPropagation(),
+      })
+    );
+  };
+
+  const mergedColumns = antColumns.map((col) => ({
+    ...col,
+    onHeaderCell: (column) => ({
+      width: column.width,
+      onResize: () => {},
+    }),
+  }));
+
   const antDataSource = state.filteredData.map((row, index) => ({
     ...row,
     key: index,
@@ -92,7 +170,7 @@ export function updateTable(total) {
   ReactDOM.render(
     React.createElement(Table, {
       key: `table-${totalRecords}-${state.currentPage}-${state.sortColumn}-${state.sortOrder}`,
-      columns: antColumns,
+      columns: mergedColumns,
       dataSource: antDataSource,
       pagination: {
         current: state.currentPage,
@@ -101,6 +179,11 @@ export function updateTable(total) {
         showSizeChanger: false,
       },
       scroll: { x: "max-content" },
+      components: {
+        header: {
+          cell: ResizableTitle,
+        },
+      },
       onChange: (pagination, filters, sorter) => {
         let needsUpdate = false;
         let sortChanged = false;
