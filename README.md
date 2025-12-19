@@ -1,4 +1,4 @@
-# Workspace Audit Events Viewer
+# Workspace Audit Event App
 
 A modern web application for visualizing and analyzing Domino workspace audit events with advanced filtering.
 
