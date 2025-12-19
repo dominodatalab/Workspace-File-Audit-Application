@@ -49,15 +49,15 @@ export const CONFIG = {
   // Human-readable column labels (matches backend COLUMN_NAME_MAPPING)
   // Used for placeholder filters before data loads
   columnLabels: {
-    timestamp: "Timestamp",
-    username: "Username",
+    timestamp: "Date & Time (UTC)",
+    username: "User Name",
     action: "Event",
-    filename: "File path",
+    filename: "File Path",
     projectName: "Project Name",
     workspaceName: "Workspace Name",
     environmentName: "Environment Name",
     environmentRevisionNumber: "Environment Revision Number",
-    hardwareTierId: "Hardware Tier",
+    hardwareTierId: "Hardware Tier ID",
     projectId: "Project ID",
     workspaceId: "Workspace ID",
     userId: "User ID",
@@ -72,10 +72,12 @@ export const CONFIG = {
     "action",
     "filename",
     "projectName",
-    "workspaceName",
-    "environmentName",
-    "hardwareTierId",
     "projectId",
+    "workspaceName",
+    "workspaceId",
+    "environmentName",
+    "environmentRevisionNumber",
+    "hardwareTierId",
   ],
 
   // Chart settings

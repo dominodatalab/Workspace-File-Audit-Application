@@ -4,7 +4,8 @@ A modern web application for visualizing and analyzing Domino workspace audit ev
 
 ## Features
 
-- **Date Range Selection**: Choose any date range with a user-friendly date picker (defaults to last 30 days)
+- **Date Range Selection**: Choose any date range with a user-friendly date picker (defaults to last 7 days)
+- **Automatic Data Loading**: Events load automatically on startup with the default date range
 - **Interactive Visualizations**: Time series charts with optional breakdown by any field, powered by Highcharts
 - **Advanced Filtering**: Multi-select filters with autocomplete search for all event columns
   - **Substring Search**: Type any text to match partial values (e.g., "demo" matches "demofile.txt")
@@ -12,9 +13,10 @@ A modern web application for visualizing and analyzing Domino workspace audit ev
   - **Exact Match**: Select specific values from the dropdown
 - **Cascading Filters**: Filter options update dynamically based on selected filters
 - **Sorting**: Click column headers to sort by any field (ascending/descending)
-- **Pagination**: Browse through events with 20 records per page
+- **Pagination**: Browse through events with 100 records per page
 - **Data Export**: Download filtered results as CSV or Parquet files
 - **Real-time Updates**: Filters are applied using DuckDB SQL on cached data for instant results
+- **Data Refresh Status**: Monitor the status of background data ingestion with timestamps
 
 ## Technology Stack
 
@@ -101,7 +103,7 @@ Execute a query with filters or custom SQL.
     "filename": ["/demofile\\d*\\.[^/]+$"]
   },
   "page": 1,
-  "pageSize": 20,
+  "pageSize": 100,
   "sortColumn": "timestamp",
   "sortOrder": "DESC"
 }
@@ -118,9 +120,10 @@ Execute a query with filters or custom SQL.
 ```json
 {
   "data": [...],
+  "chartData": [...],
   "total": 50,
   "page": 1,
-  "pageSize": 20
+  "pageSize": 100
 }
 ```
 
@@ -138,9 +141,63 @@ Get column metadata and unique values for filters.
       "values": ["Read", "Write"]
     },
     ...
+  },
+  "columnLabels": {
+    "action": "Event",
+    "username": "User Name",
+    ...
   }
 }
 ```
+
+### POST `/api/filtered-columns`
+Get available column values based on current filters (for cascading filters).
+
+**Request Body:**
+```json
+{
+  "filters": {...},
+  "substringFilters": {...},
+  "regexFilters": {...}
+}
+```
+
+**Response:**
+```json
+{
+  "columns": {
+    "action": {
+      "values": ["Read"]
+    },
+    ...
+  }
+}
+```
+
+### GET `/api/sync/status`
+Get the status of the most recent data refresh.
+
+**Response:**
+```json
+{
+  "status": "Completed",
+  "updatedAt": "2025-12-15T10:30:00Z"
+}
+```
+
+### POST `/api/download/csv`
+Download filtered data as CSV.
+
+**Request Body:** Same as `/api/query`
+
+**Response:** CSV file download
+
+### POST `/api/download/parquet`
+Download filtered data as Parquet.
+
+**Request Body:** Same as `/api/query`
+
+**Response:** Parquet file download
 
 ## Data Schema
 
@@ -159,6 +216,18 @@ The application works with workspace audit events containing the following field
 - `workspaceName`: Name of the workspace
 - `action`: Type of action performed (Read/Write)
 
+## Help & Documentation
+
+For detailed user documentation, click the **Help** link in the application's navigation bar or visit:
+
+**[Workspace File Audit App Documentation](https://docs.dominodatalab.com/en/latest/admin_guide/f3cc84/use-the-workspace-file-audit-app)**
+
+The documentation includes:
+- Step-by-step usage guides
+- Filter and search examples
+- Best practices for data analysis
+- Troubleshooting tips
+
 ## Design
 
 The UI follows the Domino design system with:
@@ -167,6 +236,7 @@ The UI follows the Domino design system with:
 - Light background (#fafafa)
 - Primary purple accent (#543fde)
 - Clean, modern interface with proper spacing and typography
+- Info banner for important usage information
 
 ## Regex Filtering Guide
 
