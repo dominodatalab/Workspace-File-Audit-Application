@@ -1,6 +1,6 @@
-# Workspace Audit Events Viewer
+# Workspace Audit Event App
 
-A modern web application for visualizing and analyzing Domino workspace audit events with advanced filtering and SQL query capabilities.
+A modern web application for visualizing and analyzing Domino workspace audit events with advanced filtering.
 
 ## Features
 
@@ -21,59 +21,62 @@ A modern web application for visualizing and analyzing Domino workspace audit ev
 ## Technology Stack
 
 ### Backend
+
 - **Flask**: Web framework for serving the UI and API endpoints
 - **DuckDB**: High-performance SQL engine for querying Parquet files
 - **Pandas**: Data manipulation and analysis
 - **Requests**: HTTP library for fetching data from Domino API
 
 ### Frontend
+
 - **Ant Design**: UI component library for filters, tables, and date pickers
 - **Highcharts**: Professional charting library for data visualization
 - **React**: For rendering Ant Design components
 - **Vanilla JavaScript**: Core application logic
 
-## Installation
-
-1. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
-
 ## Usage
 
-1. Start the Flask server:
-```bash
-python app.py
-```
+### Deployment in Domino
 
-2. Open your browser and navigate to:
-```
-http://localhost:5000
-```
+1. Go to **Projects > New Project**, then select **Import from Git** and enter the repository URL
 
-3. Using the application:
-   - **Initial Load**: Data loads automatically for the last 7 days on page load
-   - **Select Date Range**: Use the date picker to choose your desired time period, then click "Query"
-   - **Apply Filters**: Use the left sidebar to filter events by any column (multi-select with search)
-   - **Substring Search**: Type partial text to match values (e.g., "demo" matches files containing "demo")
-   - **Regex Filtering**: Type a regex pattern starting with `/` to use regex matching (e.g., `/demofile\d*\.[^/]+$`)
-   - **Change Chart Breakdown**: Select different fields to break down the time series chart
-   - **Sort Data**: Click column headers to sort ascending/descending
-   - **Browse Events**: Scroll through the paginated table (100 records per page)
-   - **Monitor Data Refresh**: Check the sync status and timestamp in the control panel
-   - **Download**: Export filtered data as CSV or Parquet
-   - **Help**: Click the Help link in the navigation bar for detailed documentation
+2. Complete the project creation and open the project
+
+3. Go to **Deployments > Apps & Agents > Publish > App**
+
+4. Configure the deployment:
+
+   - **Name and Description**: (example: "Workspace File Audit Query Tool")
+   - **Environment**: Choose the latest Domino Standard Environment
+   - **Code**: Select `start.sh` as the App File
+   - **Hardware Tier**: Medium
+   - **Enable deep linking and query parameters**: Check this option
+
+5. Click **Publish**. Wait for the app status to show **Running**, then select **Open**
+
+### Using the Application
+
+- **Select Date Range**: Use the date picker to choose your desired time period (defaults to last 7 days)
+- **Load Data**: Click "Query" to fetch events from the Domino API (automatically loads on startup)
+- **Apply Filters**: Use the left sidebar to filter events by any column (multi-select with search)
+- **Regex Filtering**: Type a regex pattern starting with `/` to use regex matching (e.g., `/demofile\d*\.[^/]+$`)
+- **Change Chart Breakdown**: Select different fields to break down the time series chart
+- **Browse Events**: Scroll through the paginated table of raw events
+- **Download**: Export filtered data as CSV or Parquet
 
 ## API Endpoints
 
 ### GET `/api/data`
+
 Fetch parquet data for a given date range.
 
 **Parameters:**
+
 - `start`: Start date (ISO format)
 - `end`: End date (ISO format)
 
 **Response:**
+
 ```json
 {
   "data": [...],
@@ -82,9 +85,11 @@ Fetch parquet data for a given date range.
 ```
 
 ### POST `/api/query`
+
 Execute a query with filters or custom SQL.
 
 **Request Body:**
+
 ```json
 {
   "filters": {
@@ -105,11 +110,13 @@ Execute a query with filters or custom SQL.
 ```
 
 **Filter Types:**
+
 - `filters`: Exact match filters (IN clause)
 - `substringFilters`: Substring match filters (LIKE clause)
 - `regexFilters`: Regex pattern filters (regexp_matches function)
 
 **Response:**
+
 ```json
 {
   "data": [...],
@@ -121,9 +128,11 @@ Execute a query with filters or custom SQL.
 ```
 
 ### GET `/api/columns`
+
 Get column metadata and unique values for filters.
 
 **Response:**
+
 ```json
 {
   "columns": {
@@ -222,6 +231,7 @@ The documentation includes:
 ## Design
 
 The UI follows the Domino design system with:
+
 - Dark navigation bar (#2e2e38)
 - Light background (#fafafa)
 - Primary purple accent (#543fde)
@@ -239,14 +249,17 @@ The file path filter (and other filters) support regex patterns for advanced mat
 ### Example Patterns
 
 - `/demofile\d*\.[^/]+$` - Matches files named "demofile" followed by optional digits, with any extension
+
   - Matches: `demofile.txt`, `demofile123.py`, `/path/to/demofile99.csv`
   - Doesn't match: `demofile_backup.txt`, `demo.txt`
 
 - `/\.py$` - Matches all Python files
+
   - Matches: `script.py`, `/code/main.py`
   - Doesn't match: `script.pyc`, `python.txt`
 
 - `/^/home/[^/]+/data/` - Matches files in any user's data directory
+
   - Matches: `/home/user1/data/file.csv`, `/home/admin/data/report.xlsx`
   - Doesn't match: `/home/user1/documents/file.csv`
 
@@ -276,4 +289,3 @@ The file path filter (and other filters) support regex patterns for advanced mat
 - Parquet files are stored in the system's temp directory under `workspace_audit_events`
 - Date range changes trigger a fresh download from the Domino API
 - Filters query the locally cached parquet data for instant results
-
