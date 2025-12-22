@@ -158,7 +158,6 @@ export function updateTable(total) {
     ...col,
     onHeaderCell: (column) => ({
       width: column.width,
-      onResize: () => {},
     }),
   }));
 

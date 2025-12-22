@@ -36,6 +36,7 @@ if (infoBannerCloseBtn) {
   });
 }
 
+dayjs.extend(dayjs_plugin_utc);
 dayjs.extend(dayjs_plugin_customParseFormat);
 dayjs.extend(dayjs_plugin_weekday);
 dayjs.extend(dayjs_plugin_localeData);

@@ -20,22 +20,28 @@ function getBaseChartConfig(chartType = "column", additionalPlotOptions = {}) {
     title: {
       text: null,
     },
+    time: {
+      useUTC: true,
+    },
     xAxis: {
       type: "datetime",
       title: {
-        text: "Time",
+        text: "Time (UTC)",
       },
-      min: dayjs(state.dateRange[0]).startOf('day').valueOf(),
-      max: dayjs(state.dateRange[1]).endOf('day').valueOf(),
+      min: dayjs.utc(state.dateRange[0]).startOf("day").valueOf(),
+      max: dayjs.utc(state.dateRange[1]).endOf("day").valueOf(),
     },
     yAxis: {
       title: {
         text: "Number of Events",
       },
+      min: 0,
     },
     plotOptions: {
       column: {
         borderWidth: 0,
+        pointPadding: 0,
+        groupPadding: 0.1,
         ...additionalPlotOptions,
       },
     },
@@ -85,8 +91,8 @@ export function updateChart() {
     // Use all time buckets (from date range) sorted
     const sortedTimes = allTimeBuckets.sort();
     const chartData = sortedTimes.map((time) => ({
-      x: new Date(time).getTime(),
-      y: timeSeriesData[time],
+      x: dayjs.utc(time).valueOf(),
+      y: timeSeriesData[time] || 0,
     }));
 
     const chartConfig = {
@@ -104,7 +110,11 @@ export function updateChart() {
     // Stacked area chart by field
     const topValues =
       state.chartData && state.chartData.length > 0
-        ? getTopNValues(state.chartData, state.selectedField, CONFIG.chart.topNValues)
+        ? getTopNValues(
+            state.chartData,
+            state.selectedField,
+            CONFIG.chart.topNValues
+          )
         : [];
 
     // Initialize time series for each top value and "Other"
@@ -142,7 +152,7 @@ export function updateChart() {
     // Add top values first
     topValues.forEach((value) => {
       const data = sortedTimes.map((time) => ({
-        x: new Date(time).getTime(),
+        x: dayjs.utc(time).valueOf(),
         y: seriesData[value][time] || 0,
       }));
       series.push({
@@ -160,7 +170,7 @@ export function updateChart() {
         : 0;
     if (totalUniqueValues > CONFIG.chart.topNValues) {
       const data = sortedTimes.map((time) => ({
-        x: new Date(time).getTime(),
+        x: dayjs.utc(time).valueOf(),
         y: seriesData["Other"][time] || 0,
       }));
       series.push({

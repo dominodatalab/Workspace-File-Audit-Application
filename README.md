@@ -47,7 +47,7 @@ A modern web application for visualizing and analyzing Domino workspace audit ev
 4. Configure the deployment:
 
    - **Name and Description**: (example: "Workspace File Audit Query Tool")
-   - **Environment**: Choose the latest Domino Standard Environment
+   - **Environment**: Choose the latest released Domino Standard Environment. If you do not see it in your deployment please contact your domino administrator.
    - **Code**: Select `start.sh` as the App File
    - **Hardware Tier**: Medium
    - **Enable deep linking and query parameters**: Check this option
@@ -151,9 +151,11 @@ Get column metadata and unique values for filters.
 ```
 
 ### POST `/api/filtered-columns`
+
 Get available column values based on current filters (for cascading filters).
 
 **Request Body:**
+
 ```json
 {
   "filters": {...},
@@ -163,6 +165,7 @@ Get available column values based on current filters (for cascading filters).
 ```
 
 **Response:**
+
 ```json
 {
   "columns": {
@@ -175,9 +178,11 @@ Get available column values based on current filters (for cascading filters).
 ```
 
 ### GET `/api/sync/status`
+
 Get the status of the most recent data refresh.
 
 **Response:**
+
 ```json
 {
   "status": "Completed",
@@ -186,6 +191,7 @@ Get the status of the most recent data refresh.
 ```
 
 ### POST `/api/download/csv`
+
 Download filtered data as CSV.
 
 **Request Body:** Same as `/api/query`
@@ -193,6 +199,7 @@ Download filtered data as CSV.
 **Response:** CSV file download
 
 ### POST `/api/download/parquet`
+
 Download filtered data as Parquet.
 
 **Request Body:** Same as `/api/query`
@@ -223,6 +230,7 @@ For detailed user documentation, click the **Help** link in the application's na
 **[Workspace File Audit App Documentation](https://docs.dominodatalab.com/en/latest/admin_guide/f3cc84/use-the-workspace-file-audit-app)**
 
 The documentation includes:
+
 - Step-by-step usage guides
 - Filter and search examples
 - Best practices for data analysis

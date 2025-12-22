@@ -17,7 +17,7 @@ export function determineTimeBucket(dateRange) {
 
 // Helper function to bucket timestamps
 export function bucketTimestamp(timestamp, bucket) {
-  const date = dayjs(timestamp);
+  const date = dayjs.utc(timestamp);
 
   switch (bucket) {
     case "hour":
@@ -52,13 +52,10 @@ export function getTopNValues(data, field, n = 10) {
 // Helper function to generate all time buckets within a date range
 export function generateTimeBuckets(startDate, endDate, bucket) {
   const buckets = [];
-  let current = dayjs(startDate);
-  const end = dayjs(endDate);
+  let current = dayjs.utc(startDate).startOf('day');
+  const end = dayjs.utc(endDate).endOf('day');
 
-  while (
-    current.isBefore(end) ||
-    current.isSame(end, bucket === "hour" ? "hour" : "day")
-  ) {
+  while (current.isBefore(end) || current.isSame(end, bucket)) {
     buckets.push(bucketTimestamp(current.toISOString(), bucket));
 
     // Increment based on bucket type

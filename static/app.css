@@ -464,6 +464,21 @@ body {
     min-width: 250px !important;
 }
 
+/* Truncate long filter tags */
+.ant-select-selection-item {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ant-select-selection-item-content {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Resizable Table Columns */
 .react-resizable {
     position: relative;
