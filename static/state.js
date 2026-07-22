@@ -18,6 +18,31 @@ function getBasePath() {
 
 export const BASE_PATH = getBasePath();
 
+// Load user's hidden-column preferences from localStorage
+function loadHiddenColumns() {
+  try {
+    const stored = localStorage.getItem("domino.auditApp.hiddenColumns");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    // Ignore malformed/unavailable storage
+  }
+  return [...(CONFIG.defaultHiddenColumns || [])];
+}
+
+// Persist the user's hidden-column preferences to localStorage
+export function saveHiddenColumns() {
+  try {
+    localStorage.setItem(
+      "domino.auditApp.hiddenColumns",
+      JSON.stringify(state.hiddenColumns)
+    );
+  } catch (e) {
+  }
+}
+
 export const state = {
   data: [],
   filteredData: [],
@@ -35,5 +60,6 @@ export const state = {
   sortColumn: CONFIG.defaultSortColumn,
   sortOrder: CONFIG.defaultSortOrder,
   lastSyncTime: null,
-  lastSyncStatus: null
+  lastSyncStatus: null,
+  hiddenColumns: loadHiddenColumns(), // Columns the user has toggled off
 };

@@ -7,7 +7,6 @@ import { state } from "../state.js";
 import {
   determineTimeBucket,
   bucketTimestamp,
-  getTopNValues,
   generateTimeBuckets,
 } from "../utils/chartHelpers.js";
 
@@ -54,7 +53,7 @@ function getBaseChartConfig(chartType = "column", additionalPlotOptions = {}) {
   };
 }
 
-// Update chart
+// Update chart using pre-aggregated data from backend
 export function updateChart() {
   if (!state.dateRange || !state.dateRange[0] || !state.dateRange[1]) {
     document.getElementById("chart").innerHTML =
@@ -62,129 +61,94 @@ export function updateChart() {
     return;
   }
 
-  const bucket = determineTimeBucket(state.dateRange);
+  const chartData = state.chartData;
 
-  // Generate all time buckets for the full date range (fixed x-axis)
+  // Support both pre-aggregated format {bucketSize, selectedField, data:[...]}
+  // and legacy raw-rows array format (fallback)
+  const isAggregated =
+    chartData &&
+    !Array.isArray(chartData) &&
+    chartData.data !== undefined;
+
+  if (!isAggregated) {
+    // Legacy path — should not happen after this change, but guard just in case
+    document.getElementById("chart").innerHTML =
+      '<p style="text-align: center; padding: 20px; color: #65657b;">No data available</p>';
+    return;
+  }
+
+  const bucketSize = chartData.bucketSize || determineTimeBucket(state.dateRange);
+  const rows = chartData.data || [];
   const allTimeBuckets = generateTimeBuckets(
     state.dateRange[0],
     state.dateRange[1],
-    bucket
+    bucketSize
   );
 
-  // Create time series data
-  const timeSeriesData = {};
+  if (!chartData.selectedField) {
+    // Simple time series — rows are [{time_bucket, count}]
+    const timeSeriesData = {};
+    allTimeBuckets.forEach((b) => { timeSeriesData[b] = 0; });
 
-  // Initialize all buckets with 0
-  allTimeBuckets.forEach((bucket) => {
-    timeSeriesData[bucket] = 0;
-  });
+    rows.forEach((row) => {
+      const tb = bucketTimestamp(row.time_bucket, bucketSize);
+      timeSeriesData[tb] = (timeSeriesData[tb] || 0) + row.count;
+    });
 
-  if (!state.selectedField) {
-    // Simple time series - just count events per time bucket
-    if (state.chartData && state.chartData.length > 0) {
-      state.chartData.forEach((event) => {
-        const timeBucket = bucketTimestamp(event.timestamp, bucket);
-        timeSeriesData[timeBucket] = (timeSeriesData[timeBucket] || 0) + 1;
-      });
-    }
-
-    // Use all time buckets (from date range) sorted
     const sortedTimes = allTimeBuckets.sort();
-    const chartData = sortedTimes.map((time) => ({
+    const seriesData = sortedTimes.map((time) => ({
       x: dayjs.utc(time).valueOf(),
       y: timeSeriesData[time] || 0,
     }));
 
-    const chartConfig = {
+    Highcharts.chart("chart", {
       ...getBaseChartConfig(),
-      series: [
-        {
-          name: "Events",
-          data: chartData,
-        },
-      ],
-    };
-
-    Highcharts.chart("chart", chartConfig);
+      series: [{ name: "Events", data: seriesData }],
+    });
   } else {
-    // Stacked area chart by field
-    const topValues =
-      state.chartData && state.chartData.length > 0
-        ? getTopNValues(
-            state.chartData,
-            state.selectedField,
-            CONFIG.chart.topNValues
-          )
-        : [];
+    // Stacked chart by field — rows are [{time_bucket, field_value, count}]
+    const fieldValues = [
+      ...new Set(rows.filter((r) => r.field_value !== "Other").map((r) => r.field_value)),
+    ];
+    const hasOther = rows.some((r) => r.field_value === "Other");
 
-    // Initialize time series for each top value and "Other"
-    const seriesData = {};
-    topValues.forEach((value) => {
-      seriesData[value] = {};
-      // Initialize all buckets with 0 for each series
-      allTimeBuckets.forEach((bucket) => {
-        seriesData[value][bucket] = 0;
-      });
-    });
-    seriesData["Other"] = {};
-    allTimeBuckets.forEach((bucket) => {
-      seriesData["Other"][bucket] = 0;
+    const seriesMap = {};
+    [...fieldValues, ...(hasOther ? ["Other"] : [])].forEach((v) => {
+      seriesMap[v] = {};
+      allTimeBuckets.forEach((b) => { seriesMap[v][b] = 0; });
     });
 
-    // Aggregate data
-    if (state.chartData && state.chartData.length > 0) {
-      state.chartData.forEach((event) => {
-        const timeBucket = bucketTimestamp(event.timestamp, bucket);
-        const fieldValue = event[state.selectedField] || "Unknown";
-        const seriesKey = topValues.includes(fieldValue) ? fieldValue : "Other";
+    rows.forEach((row) => {
+      const tb = bucketTimestamp(row.time_bucket, bucketSize);
+      const fv = row.field_value || "Other";
+      if (seriesMap[fv]) {
+        seriesMap[fv][tb] = (seriesMap[fv][tb] || 0) + row.count;
+      }
+    });
 
-        seriesData[seriesKey][timeBucket] =
-          (seriesData[seriesKey][timeBucket] || 0) + 1;
-      });
-    }
-
-    // Use all time buckets (from date range) sorted
     const sortedTimes = allTimeBuckets.sort();
-
-    // Convert to Highcharts series format
-    const series = [];
-
-    // Add top values first
-    topValues.forEach((value) => {
-      const data = sortedTimes.map((time) => ({
+    const series = fieldValues.map((value) => ({
+      name: value,
+      data: sortedTimes.map((time) => ({
         x: dayjs.utc(time).valueOf(),
-        y: seriesData[value][time] || 0,
-      }));
-      series.push({
-        name: value,
-        data: data,
-      });
-    });
+        y: seriesMap[value][time] || 0,
+      })),
+    }));
 
-    // Add "Other" if there are more than topNValues unique values
-    const totalUniqueValues =
-      state.chartData && state.chartData.length > 0
-        ? new Set(
-            state.chartData.map((e) => e[state.selectedField] || "Unknown")
-          ).size
-        : 0;
-    if (totalUniqueValues > CONFIG.chart.topNValues) {
-      const data = sortedTimes.map((time) => ({
-        x: dayjs.utc(time).valueOf(),
-        y: seriesData["Other"][time] || 0,
-      }));
+    if (hasOther) {
       series.push({
         name: "Other",
-        data: data,
+        data: sortedTimes.map((time) => ({
+          x: dayjs.utc(time).valueOf(),
+          y: seriesMap["Other"][time] || 0,
+        })),
         color: "#cccccc",
       });
     }
 
-    const chartConfig = {
+    Highcharts.chart("chart", {
       ...getBaseChartConfig("column", { stacking: "normal" }),
       series: series,
-    };
-
-    Highcharts.chart("chart", chartConfig);
+    });
   }
 }

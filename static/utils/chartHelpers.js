@@ -25,7 +25,8 @@ export function bucketTimestamp(timestamp, bucket) {
     case "day":
       return date.format("YYYY-MM-DD");
     case "week":
-      return date.startOf("week").format("YYYY-MM-DD");
+      // Use ISO week (Monday start) to match DuckDB's date_trunc('week', ...)
+      return date.startOf("isoWeek").format("YYYY-MM-DD");
     case "month":
       return date.format("YYYY-MM");
     default:

@@ -3,9 +3,108 @@
 // ============================================================================
 
 import { CONFIG } from "../config.js";
-import { state } from "../state.js";
+import { state, saveHiddenColumns } from "../state.js";
 import { getColumnLabel } from "../utils/helpers.js";
 import { applyFilters } from "../services/api.js";
+
+// Renders the "Columns" dropdown that lets the user toggle column visibility.
+// `displayableColumns` is the full set of columns eligible to be shown.
+function renderColumnToggle(displayableColumns, total) {
+  const mount = document.getElementById("column-toggle");
+  if (!mount) return;
+
+  const { Dropdown, Checkbox, Button } = antd;
+
+  const buildMenu = () =>
+    React.createElement(
+      "div",
+      { className: "column-toggle-menu" },
+      React.createElement(
+        "div",
+        { className: "column-toggle-menu-title" },
+        "Show columns"
+      ),
+      displayableColumns.map((col) => {
+        const checked = !state.hiddenColumns.includes(col);
+        // Prevent hiding the last visible column
+        const isLastVisible =
+          checked &&
+          displayableColumns.filter((c) => !state.hiddenColumns.includes(c))
+            .length === 1;
+
+        return React.createElement(
+          "div",
+          { key: col, className: "column-toggle-item" },
+          React.createElement(
+            Checkbox,
+            {
+              checked,
+              disabled: isLastVisible,
+              onChange: (e) => {
+                if (e.target.checked) {
+                  state.hiddenColumns = state.hiddenColumns.filter(
+                    (c) => c !== col
+                  );
+                } else if (!state.hiddenColumns.includes(col)) {
+                  state.hiddenColumns = [...state.hiddenColumns, col];
+                }
+                saveHiddenColumns();
+                updateTable(total);
+              },
+            },
+            getColumnLabel(col)
+          )
+        );
+      })
+    );
+
+  ReactDOM.render(
+    React.createElement(
+      Dropdown,
+      {
+        trigger: ["click"],
+        placement: "bottomRight",
+        dropdownRender: () => buildMenu(),
+      },
+      React.createElement(
+        Button,
+        {
+          size: "small",
+          className: "column-toggle-btn",
+          title: "Show/hide columns",
+          "aria-label": "Show/hide columns",
+          icon: React.createElement(
+            "svg",
+            {
+              width: 16,
+              height: 16,
+              viewBox: "0 0 24 24",
+              fill: "none",
+              xmlns: "http://www.w3.org/2000/svg",
+            },
+            React.createElement("line", {
+              x1: 4, y1: 8, x2: 20, y2: 8,
+              stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round",
+            }),
+            React.createElement("circle", {
+              cx: 9, cy: 8, r: 2.5,
+              fill: "#fff", stroke: "currentColor", strokeWidth: 2,
+            }),
+            React.createElement("line", {
+              x1: 4, y1: 16, x2: 20, y2: 16,
+              stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round",
+            }),
+            React.createElement("circle", {
+              cx: 15, cy: 16, r: 2.5,
+              fill: "#fff", stroke: "currentColor", strokeWidth: 2,
+            })
+          ),
+        }
+      )
+    ),
+    mount
+  );
+}
 
 export function updateTable(total) {
   const container = document.getElementById("table-container");
@@ -39,12 +138,18 @@ export function updateTable(total) {
   const allColumns =
     state.filteredData.length > 0 ? Object.keys(state.filteredData[0]) : [];
 
-  const visibleColumns = [
+  const displayableColumns = [
     ...CONFIG.tableColumnOrder.filter((col) => allColumns.includes(col)),
     ...allColumns.filter(
       (col) => !CONFIG.tableColumnOrder.includes(col) && !CONFIG.hiddenTableColumns.includes(col)
     ),
   ];
+
+  renderColumnToggle(displayableColumns, total);
+
+  const visibleColumns = displayableColumns.filter(
+    (col) => !state.hiddenColumns.includes(col)
+  );
 
   const { Table } = antd;
 
