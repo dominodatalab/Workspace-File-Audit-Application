@@ -1,4 +1,3 @@
-#hey!!
 """
 Helper functions for the Workspace Audit application.
 """
