@@ -124,6 +124,7 @@ export async function applyFilters(resetPage = false) {
       pageSize: state.pageSize,
       sortColumn: state.sortColumn,
       sortOrder: state.sortOrder,
+      selectedField: state.selectedField,
     };
 
     const response = await fetch(`${BASE_PATH}/api/query`, {

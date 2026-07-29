@@ -514,3 +514,41 @@ body {
 .react-resizable-handle:hover::after {
     background-color: #543fde;
 }
+
+/* Column visibility toggle */
+.column-toggle-btn {
+    height: 32px;
+    width: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #543fde;
+}
+
+.column-toggle-menu {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    padding: 8px 4px;
+    max-height: 320px;
+    overflow-y: auto;
+    min-width: 200px;
+}
+
+.column-toggle-menu-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #8c8c98;
+    padding: 4px 12px 8px;
+}
+
+.column-toggle-item {
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.column-toggle-item:hover {
+    background-color: #f5f5f7;
+}

@@ -5,6 +5,7 @@ import requests
 import json
 import tempfile
 import os
+import re
 import duckdb
 import traceback
 import logging
@@ -62,6 +63,10 @@ def download_parquet_data(start_date, end_date):
         return None
 
     logger.info(f"Received {len(data) if isinstance(data, list) else 0} download URLs")
+
+    if isinstance(data, list) and len(data) == 0:
+        logger.warning("Received empty list of download URLs from API")
+        return []
 
     if not data or not isinstance(data, list):
         logger.warning("No download URLs received from API")
@@ -124,6 +129,10 @@ def get_data():
 
         logger.info("Downloading new parquet data...")
         parquet_paths = download_parquet_data(start_date, end_date)
+        if isinstance(parquet_paths, list) and len(parquet_paths) == 0:
+            logger.warning("No parquet files found for the given date range")
+            return jsonify({'error': 'No data available for the selected date range.'}), 404
+
         if not parquet_paths:
             logger.error("Failed to download parquet data")
             return jsonify({'error': 'Failed to download data. Check server logs for details.'}), 500
@@ -212,6 +221,7 @@ def query_data():
         page_size = data.get('pageSize', 100)
         sort_column = data.get('sortColumn', 'timestamp')  # Default to timestamp
         sort_order = data.get('sortOrder', 'DESC')  # Default to descending (latest first)
+        selected_field = data.get('selectedField', None)
         
         if not parquet_cache['paths']:
             return jsonify({'error': 'No data loaded. Please select a date range first.'}), 400
@@ -307,39 +317,87 @@ def query_data():
         logger.info(f"Sort params: column={sort_column}, order={sort_order}, page={page}, page_size={page_size}")
         
         # Get total count
-        count_query = f"SELECT COUNT(*) as total FROM ({query.replace(order_by_clause, '')}) as subquery"
+        base_query = query.replace(order_by_clause, '')
+        count_query = f"SELECT COUNT(*) as total FROM ({base_query}) as subquery"
         total = conn.execute(count_query).fetchone()[0]
-        
-        # Get ALL filtered data for chart (without pagination, but sorted)
-        all_filtered_result = conn.execute(query).fetchdf()
-        
+
+        # Determine time bucket size based on date range (mirrors frontend logic)
+        days_diff = (end_date - start_date).days
+        if days_diff <= 1:
+            bucket_size = 'hour'
+        elif days_diff <= 60:
+            bucket_size = 'day'
+        elif days_diff <= 365:
+            bucket_size = 'week'
+        else:
+            bucket_size = 'month'
+
+        # Build server-side aggregated chart data
+        if selected_field and re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', selected_field):
+            top_values_df = conn.execute(f"""
+                SELECT CAST({selected_field} AS VARCHAR) AS field_value, COUNT(*) AS cnt
+                FROM ({base_query}) AS sub
+                GROUP BY {selected_field}
+                ORDER BY cnt DESC
+                LIMIT 10
+            """).fetchdf()
+            top_values = [str(v) for v in top_values_df['field_value'].tolist() if v is not None]
+            if top_values:
+                escaped = [f"'{v.replace(chr(39), chr(39)+chr(39))}'" for v in top_values]
+                field_expr = f"CASE WHEN CAST({selected_field} AS VARCHAR) IN ({','.join(escaped)}) THEN CAST({selected_field} AS VARCHAR) ELSE 'Other' END"
+            else:
+                field_expr = "'Other'"
+            chart_agg = conn.execute(f"""
+                SELECT
+                    strftime(date_trunc('{bucket_size}', to_timestamp(timestamp / 1e9)), '%Y-%m-%dT%H:%M:%S') AS time_bucket,
+                    {field_expr} AS field_value,
+                    COUNT(*) AS count
+                FROM ({base_query}) AS sub
+                GROUP BY date_trunc('{bucket_size}', to_timestamp(timestamp / 1e9)), field_value
+                ORDER BY date_trunc('{bucket_size}', to_timestamp(timestamp / 1e9)), count DESC
+            """).fetchdf()
+            chart_data = {
+                'bucketSize': bucket_size,
+                'selectedField': selected_field,
+                'data': chart_agg.to_dict('records'),
+            }
+        else:
+            chart_agg = conn.execute(f"""
+                SELECT
+                    strftime(date_trunc('{bucket_size}', to_timestamp(timestamp / 1e9)), '%Y-%m-%dT%H:%M:%S') AS time_bucket,
+                    COUNT(*) AS count
+                FROM ({base_query}) AS sub
+                GROUP BY date_trunc('{bucket_size}', to_timestamp(timestamp / 1e9))
+                ORDER BY date_trunc('{bucket_size}', to_timestamp(timestamp / 1e9))
+            """).fetchdf()
+            chart_data = {
+                'bucketSize': bucket_size,
+                'selectedField': None,
+                'data': chart_agg.to_dict('records'),
+            }
+
         # Add pagination for table data
         offset = (page - 1) * page_size
         paginated_query = query + f" LIMIT {page_size} OFFSET {offset}"
-        
+
         logger.info(f"Paginated query: {paginated_query[:200]}... OFFSET {offset}")
-        
+
         # Execute paginated query for table
         result = conn.execute(paginated_query).fetchdf()
-        
-        logger.info(f"Query results: total={total}, chart_rows={len(all_filtered_result)}, table_rows={len(result)}")
-        
-        # Convert timestamp to readable format for both datasets
+
+        logger.info(f"Query results: total={total}, chart_buckets={len(chart_agg)}, table_rows={len(result)}")
+
+        # Convert timestamp to readable format for table data only
         if 'timestamp' in result.columns:
             result['timestamp'] = (result['timestamp'] / 1e9).apply(
                 lambda x: datetime.fromtimestamp(x).isoformat()
             )
-        
-        if 'timestamp' in all_filtered_result.columns:
-            all_filtered_result['timestamp'] = (all_filtered_result['timestamp'] / 1e9).apply(
-                lambda x: datetime.fromtimestamp(x).isoformat()
-            )
-        
+
         conn.close()
-        
+
         return jsonify({
             'data': result.to_dict('records'),
-            'chartData': all_filtered_result.to_dict('records'),  # All filtered data for chart
+            'chartData': chart_data,
             'total': total,
             'page': page,
             'pageSize': page_size

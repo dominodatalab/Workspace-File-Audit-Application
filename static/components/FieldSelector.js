@@ -5,7 +5,7 @@
 import { CONFIG } from "../config.js";
 import { state } from "../state.js";
 import { getColumnLabel } from "../utils/helpers.js";
-import { updateChart } from "./Chart.js";
+import { applyFilters } from "../services/api.js";
 
 // Render field selector
 export function renderFieldSelector() {
@@ -44,7 +44,7 @@ export function renderFieldSelector() {
       onChange: (value) => {
         setSelectedValue(value);
         state.selectedField = value;
-        updateChart();
+        applyFilters(false);
       },
     });
   };

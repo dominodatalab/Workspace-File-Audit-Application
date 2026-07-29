@@ -31,8 +31,11 @@ export const CONFIG = {
     "userId",
   ],
 
-  // Columns to hide from table display
-  hiddenTableColumns: ["userId", "uuid", "deduplicationId"],
+  // Columns to hide from table display entirely (never shown, not in toggle)
+  hiddenTableColumns: ["userId", "deduplicationId"],
+
+  // Columns hidden by default in the table display
+  defaultHiddenColumns: ["uuid"],
 
   // Filter sections configuration
   filterSections: {
@@ -67,6 +70,7 @@ export const CONFIG = {
 
   // Table column display order
   tableColumnOrder: [
+    "uuid",
     "timestamp",
     "username",
     "action",

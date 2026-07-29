@@ -43,6 +43,7 @@ dayjs.extend(dayjs_plugin_localeData);
 dayjs.extend(dayjs_plugin_weekOfYear);
 dayjs.extend(dayjs_plugin_weekYear);
 dayjs.extend(dayjs_plugin_advancedFormat);
+dayjs.extend(dayjs_plugin_isoWeek);
 
 initializeDateRange();
 renderPlaceholderFilters();

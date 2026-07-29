@@ -2,6 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <base id="app-base" href="/" />
+    <script>
+      !function(){
+        var p = window.location.pathname;
+        document.getElementById('app-base').href = p.endsWith('/') ? p : p + '/';
+      }();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Workspace File Audit</title>
 
@@ -43,6 +50,10 @@
     ></script>
     <script
       src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/advancedFormat.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/isoWeek.js"
       crossorigin="anonymous"
     ></script>
     <script
@@ -257,13 +268,14 @@
                   style="font-size: 12px; color: #65657b"
                 ></div>
               </div>
-              <div style="display: flex; gap: 8px">
+              <div style="display: flex; gap: 8px; align-items: center">
                 <button class="download-btn" id="download-parquet-btn">
                   Download Parquet
                 </button>
                 <button class="download-btn" id="download-csv-btn">
                   Download CSV
                 </button>
+                <div id="column-toggle"></div>
               </div>
             </div>
             <div id="table-container"></div>
