@@ -22,15 +22,18 @@ export async function loadData() {
     const startDate = state.dateRange[0].format("YYYY-MM-DD");
     const endDate = state.dateRange[1].format("YYYY-MM-DD");
 
-    const response = await fetch(
-      `${BASE_PATH}/api/data?start=${startDate}&end=${endDate}`
-    );
+    const response = await fetch(`${BASE_PATH}/api/data/load`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ start: startDate, end: endDate }),
+    });
     const result = await response.json();
 
     if (response.ok) {
-      state.data = result.data;
-      state.filteredData = result.data;
-      state.chartData = result.data;
+      state.filteredData = [];
+      state.chartData = [];
 
       await loadColumns();
       renderFilters();
@@ -57,7 +60,7 @@ export async function loadData() {
 
 export async function loadColumns() {
   try {
-    const response = await fetch(`${BASE_PATH}/api/columns`);
+    const response = await fetch(`${BASE_PATH}/api/data/columns`);
     const result = await response.json();
 
     if (response.ok) {
@@ -82,7 +85,7 @@ export async function loadAvailableColumns() {
     const cleanedSubstringFilters = cleanFilters(state.substringFilters);
     const cleanedRegexFilters = cleanFilters(state.regexFilters);
 
-    const response = await fetch(`${BASE_PATH}/api/filtered-columns`, {
+    const response = await fetch(`${BASE_PATH}/api/data/filtered-columns`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -127,7 +130,7 @@ export async function applyFilters(resetPage = false) {
       selectedField: state.selectedField,
     };
 
-    const response = await fetch(`${BASE_PATH}/api/query`, {
+    const response = await fetch(`${BASE_PATH}/api/data/query`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -232,7 +235,7 @@ export async function executeSqlQuery() {
 
   showLoading(true);
   try {
-    const response = await fetch(`${BASE_PATH}/api/query`, {
+    const response = await fetch(`${BASE_PATH}/api/data/query`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

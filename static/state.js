@@ -44,7 +44,6 @@ export function saveHiddenColumns() {
 }
 
 export const state = {
-  data: [],
   filteredData: [],
   chartData: [], // Separate data for chart (not paginated)
   columns: {},
