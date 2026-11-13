@@ -65,25 +65,32 @@ A modern web application for visualizing and analyzing Domino workspace audit ev
 
 ## API Endpoints
 
-### GET `/api/data`
+### POST `/api/data/load`
 
-Fetch parquet data for a given date range.
+Download and cache the events for a given date range and return how many there are. The events themselves are
+fetched page by page through `/api/data/query`.
 
-**Parameters:**
+**Request Body:**
+
+```json
+{
+  "start": "2025-12-01",
+  "end": "2025-12-07"
+}
+```
 
 - `start`: Start date (ISO format)
-- `end`: End date (ISO format)
+- `end`: End date (ISO format), inclusive
 
 **Response:**
 
 ```json
 {
-  "data": [...],
   "total": 100
 }
 ```
 
-### POST `/api/query`
+### POST `/api/data/query`
 
 Execute a query with filters or custom SQL.
 
@@ -126,7 +133,7 @@ Execute a query with filters or custom SQL.
 }
 ```
 
-### GET `/api/columns`
+### GET `/api/data/columns`
 
 Get column metadata and unique values for filters.
 
@@ -149,7 +156,7 @@ Get column metadata and unique values for filters.
 }
 ```
 
-### POST `/api/filtered-columns`
+### POST `/api/data/filtered-columns`
 
 Get available column values based on current filters (for cascading filters).
 
@@ -193,7 +200,7 @@ Get the status of the most recent data refresh.
 
 Download filtered data as CSV.
 
-**Request Body:** Same as `/api/query`
+**Request Body:** Same as `/api/data/query`
 
 **Response:** CSV file download
 
@@ -201,7 +208,7 @@ Download filtered data as CSV.
 
 Download filtered data as Parquet.
 
-**Request Body:** Same as `/api/query`
+**Request Body:** Same as `/api/data/query`
 
 **Response:** Parquet file download
 
